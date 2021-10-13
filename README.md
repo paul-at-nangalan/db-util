@@ -1,5 +1,5 @@
 # db-util
-Very basic utility to set up DB tables
+Very basic utility to set up DB tables (still being developed, so may change)
 
 ## Import
 

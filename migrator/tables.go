@@ -1,25 +1,36 @@
 package migrator
 
 import (
+	"database/sql"
 	"log"
 	"strings"
-	"database/sql"
+)
+
+type DbType string
+
+const(
+	DBTYPE_MYSQL DbType = "mysql"
+	DBTYPE_POSTGRES DbType = "postgres" ////NOTE: this has not been thoroughly used/tested
 )
 
 type Migrator struct{
 	db *sql.DB
 	migrationsmap map[string]bool
+
+	dbtype DbType
 }
 
-func NewMigrator(db *sql.DB)*Migrator{
+func NewMigrator(db *sql.DB, dbtype DbType)*Migrator{
 	return &Migrator{
 		db: db,
+		dbtype: dbtype,
 	}
 }
 
 
 //columns is a map of column name to specification
-func (p *Migrator)CreateTable(
+/// Use Migrate to create a table
+func (p *Migrator)createTable(
 	name string, columns map[string]string, indexes []string, primarykeys []string){
 
 	stmt := "Create table If not Exists " + name + " ("
@@ -28,9 +39,11 @@ func (p *Migrator)CreateTable(
 		stmt += sep + colname + " " + coltype
 		sep = ", "
 	}
-	for _, indexname := range indexes {
-		stmt += sep + "index(" + indexname + ")"
-		sep = ", "
+	if p.dbtype == DBTYPE_MYSQL {
+		for _, indexname := range indexes {
+			stmt += sep + "index(" + indexname + ")"
+			sep = ", "
+		}
 	}
 	stmt += sep + " Primary Key(";
 	sep = ""
@@ -45,9 +58,31 @@ func (p *Migrator)CreateTable(
 		log.Println("Failed to create " + name  + " table with error " + err.Error())
 		panic("Failed to create table")
 	}
+	if p.dbtype != DBTYPE_MYSQL{
+		for _, index := range indexes{
+			p.CreateIndex("add-index-" + name + "-" + index,
+				             name, index)
+		}
+	}
 }
 
-func (p *Migrator)AlterTableAdd(name string, columns map[string]string){
+func (p *Migrator)CreateIndex(migration string, table string, colname string){
+	if _, ok := p.migrationsmap[migration]; ok {
+		return
+	}
+	stmt := `CREATE INDEX ON ` + table + ` (` + colname + `)`
+	_, err := p.db.Exec(stmt)
+	if err != nil {
+		log.Println("Failed to create index " + migration  + " with error " + err.Error())
+		panic("Failed to create index")
+	}
+	p.markMigration(migration)
+}
+
+func (p *Migrator)AlterTableAdd(migration string, name string, columns map[string]string){
+	if _, ok := p.migrationsmap[migration]; ok {
+		return
+	}
 	stmt := "Alter table " + name + " add ("
 	sep := ""
 	for colname, coltype := range columns {
@@ -60,18 +95,14 @@ func (p *Migrator)AlterTableAdd(name string, columns map[string]string){
 		log.Println("Failed to create " + name  + " table with error " + err.Error())
 		panic("Failed to create table")
 	}
+	p.markMigration(migration)
 }
 
 func (p *Migrator)Migrate(migration string, tablename string, columns map[string]string, indexes []string, primarykeys []string){
 	if _, ok := p.migrationsmap[migration]; !ok {
 		///this migration is new
-		p.CreateTable(tablename, columns, indexes, primarykeys)
-		_,err := p.db.Exec("Insert into migrations set migrations=?", migration)
-		if err != nil {
-			log.Println("Failed to create " + tablename  + " table with error " + err.Error())
-			panic("Failed to create table")
-		}
-		log.Println("Migrated " + migration)
+		p.createTable(tablename, columns, indexes, primarykeys)
+		p.markMigration(migration)
 	}
 }
 
@@ -87,13 +118,7 @@ func (p *Migrator)markMigration(migration string){
 func (p *Migrator)Alter(migration string, tablename string, columns map[string]string){
 	if _, ok := p.migrationsmap[migration]; !ok {
 		///this migration is new
-		p.AlterTableAdd(tablename, columns)
-		_,err := p.db.Exec("Insert into migrations set migrations=?", migration)
-		if err != nil {
-			log.Println("Failed to create " + tablename  + " table with error " + err.Error())
-			panic("Failed to create table")
-		}
-		log.Println("Migrated " + migration)
+		p.AlterTableAdd(migration, tablename, columns)
 	}
 }
 
@@ -110,12 +135,7 @@ func (p *Migrator)AlterColumnDef(migration string, tablename string, columns map
 			}
 		}
 
-		_,err := p.db.Exec("Insert into migrations set migrations=?", migration)
-		if err != nil {
-			log.Println("Failed to create " + tablename  + " table with error " + err.Error())
-			panic("Failed to create table")
-		}
-		log.Println("Migrated " + migration)
+		p.markMigration(migration)
 	}
 }
 
