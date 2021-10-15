@@ -2,9 +2,9 @@ package migrator
 
 import (
 	"database/sql"
+	"github.com/paul-at-nangalan/errorhandler/handlers"
 	"log"
 	"strings"
-	"github.com/paul-at-nangalan/errorhandler/handlers"
 )
 
 type DbType string
@@ -22,7 +22,7 @@ type Migrator struct{
 }
 
 func NewMigrator(db *sql.DB, dbtype DbType)*Migrator{
-	createmigtable := `CREATE TABLE IF NOT EXIST migrations (migration text)`
+	createmigtable := `CREATE TABLE IF NOT EXISTS migrations (migration text)`
 	_, err := db.Exec(createmigtable)
 	handlers.PanicOnError(err)
 
