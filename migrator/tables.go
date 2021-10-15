@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"log"
 	"strings"
+	"github.com/paul-at-nangalan/errorhandler/handlers"
 )
 
 type DbType string
@@ -21,10 +22,32 @@ type Migrator struct{
 }
 
 func NewMigrator(db *sql.DB, dbtype DbType)*Migrator{
-	return &Migrator{
+	createmigtable := `CREATE TABLE IF NOT EXIST migrations (migration text)`
+	_, err := db.Exec(createmigtable)
+	handlers.PanicOnError(err)
+
+	migrator := &Migrator{
 		db: db,
 		dbtype: dbtype,
 	}
+	migrator.loadMigs()
+	return migrator
+}
+
+func (p *Migrator)loadMigs(){
+	loadmigs := `SELECT migration FROM migrations`
+	res, err := p.db.Query(loadmigs)
+	handlers.PanicOnError(err)
+	defer res.Close()
+
+	migrations := make(map[string]bool)
+	for res.Next(){
+		mig := ""
+		err := res.Scan(&mig)
+		handlers.PanicOnError(err)
+		migrations[mig] = true
+	}
+	p.migrationsmap = migrations
 }
 
 
@@ -107,7 +130,7 @@ func (p *Migrator)Migrate(migration string, tablename string, columns map[string
 }
 
 func (p *Migrator)markMigration(migration string){
-	_,err := p.db.Exec("Insert into migrations set migrations=?", migration)
+	_,err := p.db.Exec("Insert into migrations (migration) VALUES($1)", migration)
 	if err != nil {
 		log.Println("Failed to set migration " + migration  + " table with error " + err.Error())
 		panic("Failed to create table")
