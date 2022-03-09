@@ -1,2 +1,4 @@
 github.com/paul-at-nangalan/errorhandler v0.0.0-20210525060727-cba369c8785e h1:7Kbab1yuZKDta7Tu74JDV+4iSttDmDgcieNrdRfdATo=
 github.com/paul-at-nangalan/errorhandler v0.0.0-20210525060727-cba369c8785e/go.mod h1:+GfM6Su5CerpcLIHxjym4LzoLFCKSSQtlCnKYVjqqUM=
+github.com/paul-at-nangalan/json-config v0.0.0-20210525054146-58797ba49d12 h1:rIVAD4+siRKqmAljVRQhcE/TKVU6pnl4Se4NMW/wW4s=
+github.com/paul-at-nangalan/json-config v0.0.0-20210525054146-58797ba49d12/go.mod h1:7nMunP92vBn33Wq5QLSBJmvK85/vkyOszO0xxl6eArE=
