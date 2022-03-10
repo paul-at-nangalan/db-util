@@ -28,7 +28,8 @@ func (p *PostgresCfg) Expand() {
 
 func Connect()*sql.DB{
 	postgrescfg := PostgresCfg{}
-	cfg.Read("postgres", &postgrescfg)
+	err := cfg.Read("postgres", &postgrescfg)
+	handlers.PanicOnError(err)
 	constr := `host=` + postgrescfg.Host + ` ` +
 		`dbname=`+ postgrescfg.Database + ` ` +
 		`user=` + postgrescfg.Username + ` ` +
