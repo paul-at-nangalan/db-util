@@ -5,6 +5,7 @@ import (
 	"github.com/paul-at-nangalan/json-config/cfg"
 	"github.com/paul-at-nangalan/errorhandler/handlers"
 	"os"
+	_ "github.com/lib/pq"
 )
 
 type PostgresCfg struct{

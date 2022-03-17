@@ -1,3 +1,5 @@
+github.com/lib/pq v1.10.4 h1:SO9z7FRPzA03QhHKJrH5BXA6HU1rS4V2nIVrrNC1iYk=
+github.com/lib/pq v1.10.4/go.mod h1:AlVN5x4E4T544tWzH6hKfbfQvm3HdbOxrmggDNAPY9o=
 github.com/paul-at-nangalan/errorhandler v0.0.0-20210525060727-cba369c8785e h1:7Kbab1yuZKDta7Tu74JDV+4iSttDmDgcieNrdRfdATo=
 github.com/paul-at-nangalan/errorhandler v0.0.0-20210525060727-cba369c8785e/go.mod h1:+GfM6Su5CerpcLIHxjym4LzoLFCKSSQtlCnKYVjqqUM=
 github.com/paul-at-nangalan/json-config v0.0.0-20210525054146-58797ba49d12 h1:rIVAD4+siRKqmAljVRQhcE/TKVU6pnl4Se4NMW/wW4s=
