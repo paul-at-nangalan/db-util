@@ -79,7 +79,7 @@ func (p *Migrator)createTable(
 	_, err := p.db.Exec(stmt)
 	if err != nil {
 		log.Println("Failed to create " + name  + " table with error " + err.Error())
-		panic("Failed to create table")
+		log.Panic("Failed to create table")
 	}
 	if p.dbtype != DBTYPE_MYSQL{
 		for _, index := range indexes{
@@ -97,7 +97,7 @@ func (p *Migrator)CreateIndex(migration string, table string, colname string){
 	_, err := p.db.Exec(stmt)
 	if err != nil {
 		log.Println("Failed to create index " + migration  + " with error " + err.Error())
-		panic("Failed to create index")
+		log.Panic("Failed to create index")
 	}
 	p.markMigration(migration)
 }
@@ -116,7 +116,7 @@ func (p *Migrator)AlterTableAdd(migration string, name string, columns map[strin
 	_, err := p.db.Exec(stmt)
 	if err != nil {
 		log.Println("Failed to create " + name  + " table with error " + err.Error())
-		panic("Failed to create table")
+		log.Panic("Failed to create table")
 	}
 	p.markMigration(migration)
 }
@@ -133,7 +133,7 @@ func (p *Migrator)markMigration(migration string){
 	_,err := p.db.Exec("Insert into migrations (migration) VALUES($1)", migration)
 	if err != nil {
 		log.Println("Failed to set migration " + migration  + " table with error " + err.Error())
-		panic("Failed to create table")
+		log.Panic("Failed to create table")
 	}
 	log.Println("Migrated " + migration)
 }
@@ -154,7 +154,7 @@ func (p *Migrator)AlterColumnDef(migration string, tablename string, columns map
 			_, err := p.db.Exec(stmt)
 			if err != nil {
 				log.Println("Failed to alter " + tablename  + " table with error " + err.Error())
-				panic("Failed to create table")
+				log.Panic("Failed to create table")
 			}
 		}
 
@@ -174,7 +174,7 @@ func (p *Migrator)AlterPrimes(migration string, tablename string, primarykeys []
 		_, err := p.db.Exec("alter table " + tablename + " drop primary key, add primary key(" + allkeys + ")")
 		if err != nil {
 			log.Println("Failed to alter primary keys ", err)
-			panic("Failed to alter primary keys")
+			log.Panic("Failed to alter primary keys")
 		}
 		p.markMigration(migration)
 	}
@@ -185,7 +185,7 @@ func (p *Migrator)DropPrimes(migration string, tablename string){
 		_, err := p.db.Exec("alter table " + tablename + " drop primary key")
 		if err != nil {
 			log.Println("Failed to drop primary keys ", err)
-			panic("Failed to drop primary keys")
+			log.Panic("Failed to drop primary keys")
 		}
 		p.markMigration(migration)
 	}
@@ -202,7 +202,7 @@ func (p *Migrator)AlterIndexes(migration string, tablename string, indexes []str
 		_, err := p.db.Exec("alter table " + tablename + " " + allindexes)
 		if err != nil {
 			log.Println("Failed to alter primary keys ", err)
-			panic("Failed to alter primary keys")
+			log.Panic("Failed to alter primary keys")
 		}
 		p.markMigration(migration)
 	}
@@ -214,7 +214,6 @@ func (p *Migrator)MigrateRaw(migration string, qry string){
 		_, err := p.db.Exec(qry)
 		if err != nil {
 			log.Panic("Failed to run migration raw ", err, " in query ", qry)
-			panic("Failed to run migration raw")
 		}
 		p.markMigration(migration)
 	}
