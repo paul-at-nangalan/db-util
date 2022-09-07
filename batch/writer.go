@@ -8,6 +8,26 @@ import (
 	"log"
 )
 
+///NOT transactional
+/// Just aimed at batching stuff up to reduce rounds trips to the DB
+/**
+Usage
+
+Create a writer:
+
+...
+
+	writer := NewWriter(db, "mytable", []string{"field1", "field2", ...},
+				25, `ON CONFLICT (field1) DO UPDATE SET field2 = excluded.field2 ...`)
+...
+
+	//// Use the writer
+	defer writer.Flush()
+
+	for .... {
+		writer.Exec(val1, val2, .... ) ////Make sure the number of fields match the col names
+	}
+ */
 type Writer struct{
 	batchstmt *sql.Stmt
 	singlstmt *sql.Stmt
