@@ -1,0 +1,9 @@
+{
+  "Username": "$STAGING_DB_USER",
+  "Password": "$STAGING_DB_PASSWD",
+  "Host":"$STAGING_DB_HOST",
+  "CAFile":"$HOME/rds-ca-2019-root.pem",
+  "Database": "$STAGING_DB",
+  "Sslmode": "verify-ca"
+
+}

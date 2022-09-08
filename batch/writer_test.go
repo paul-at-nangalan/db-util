@@ -2,10 +2,13 @@ package batch
 
 import (
 	"database/sql"
+	"flag"
 	"fmt"
 	"github.com/paul-at-nangalan/db-util/connect"
 	"github.com/paul-at-nangalan/db-util/migrator"
 	"github.com/paul-at-nangalan/errorhandler/handlers"
+	"github.com/paul-at-nangalan/json-config/cfg"
+	"os"
 	"testing"
 )
 
@@ -58,7 +61,7 @@ func Test_Writer(t *testing.T){
 	testfloat := 1.02
 	increment := 0.13
 
-	fields := []string{"field1", "field2", "float1", "float2"}
+	fields := []string{"index", "field1", "field2", "float1", "float2"}
 	batchsize := 17
 
 	testdata := make([]TestRowData, 0)
@@ -101,6 +104,7 @@ func Test_Writer(t *testing.T){
 	for i, row := range testdata{
 		if !res.Next(){
 			t.Error("Not enough rows returned, only got ", i)
+			t.FailNow()
 		}
 		index := 0
 		field1 := ""
@@ -127,4 +131,16 @@ func Test_Writer(t *testing.T){
 		}
 	}
 
+}
+
+func TestMain(m *testing.M){
+
+	cfgdir := ""
+	flag.StringVar(&cfgdir, "cfg", "../ut-cfg", "Config dir")
+	flag.Parse()
+
+	cfg.Setup(cfgdir)
+	setup()
+
+	os.Exit(m.Run())
 }

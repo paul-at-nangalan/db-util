@@ -48,12 +48,12 @@ func genQry(tablename string, colnames []string, batchsize int, ondupkey string)
 	}
 	batchqry += `) VALUES `
 	del = ""
-	innerdel := ""
 	for i := 0; i < batchsize; i++{
+		innerdel := ""
 		batchqry += del + `(`
 		for x, _ := range colnames{
 			batchqry += innerdel
-			batchqry += fmt.Sprintf("$%d", (i * x) + 1)
+			batchqry += fmt.Sprintf("$%d", (i * len(colnames)) + x + 1)
 			innerdel = ","
 		}
 		batchqry += `)`
@@ -69,6 +69,7 @@ func NewWriter(db *sql.DB, tablename string, colnames []string, ondupkeyclause s
 	///single query is just a special case of multiple
 	singleqry := genQry(tablename, colnames, 1, ondupkeyclause)
 
+	fmt.Println(batchqry)
 	batchstmt, err := db.Prepare(batchqry)
 	handlers.PanicOnError(err)
 	singlestmt, err := db.Prepare(singleqry)
@@ -101,9 +102,11 @@ func (p *Writer)Exec(vals ...interface{})(res sql.Result, err error){
 func (p *Writer)Flush()(res sql.Result, err error){
 	vals := make([]interface{}, p.numfields)
 	for i, val := range p.cache{
+		//fmt.Println("Flush, i ", i, " indx ", i % p.numfields)
 		vals[i % p.numfields] = val
-		if i % p.numfields == len(vals){
-			res, err = p.Exec(vals...)
+		if i % p.numfields == len(vals) - 1{
+			//fmt.Println("Exec ", vals)
+			res, err = p.singlstmt.Exec(vals...)
 			if err != nil{
 				return nil, err
 			}
