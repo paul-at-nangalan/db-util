@@ -106,13 +106,20 @@ func (p *Migrator)AlterTableAdd(migration string, name string, columns map[strin
 	if _, ok := p.migrationsmap[migration]; ok {
 		return
 	}
-	stmt := "Alter table " + name + " add ("
+	stmt := "Alter table " + name + " add "
+	if p.dbtype == DBTYPE_MYSQL{
+		stmt += "("
+	}else if p.dbtype == DBTYPE_POSTGRES{
+		stmt += " column "
+	}
 	sep := ""
 	for colname, coltype := range columns {
 		stmt += sep + colname + " " + coltype
 		sep = ", "
 	}
-	stmt += ")"
+	if p.dbtype == DBTYPE_MYSQL {
+		stmt += ")"
+	}
 	_, err := p.db.Exec(stmt)
 	if err != nil {
 		log.Println("Failed to create " + name  + " table with error " + err.Error())

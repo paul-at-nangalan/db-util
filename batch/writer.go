@@ -34,12 +34,18 @@ type Writer struct{
 
 	numfields int
 	batchsize int
+	batchid int64
+	incbatchid bool
 
 	cache []interface{}
 }
 
-func genQry(tablename string, colnames []string, batchsize int, ondupkey string)string{
+func genQry(tablename string, colnames []string, batchsize int, ondupkey string,
+	batchidcol string)string{
 
+	if batchidcol != "" {
+		colnames = append(colnames, batchidcol)
+	}
 	batchqry := `INSERT INTO ` + tablename + `(`
 	del := ""
 	for _, colname := range colnames{
@@ -63,34 +69,55 @@ func genQry(tablename string, colnames []string, batchsize int, ondupkey string)
 	return batchqry
 }
 
-func NewWriter(db *sql.DB, tablename string, colnames []string, ondupkeyclause string,
-	batchsize int)*Writer{
-	batchqry := genQry(tablename, colnames, batchsize, ondupkeyclause)
+func newWriter(db *sql.DB, tablename string, colnames []string, ondupkeyclause string,
+	batchsize int, batchidcol string)*Writer{
+	batchqry := genQry(tablename, colnames, batchsize, ondupkeyclause, batchidcol)
 	///single query is just a special case of multiple
-	singleqry := genQry(tablename, colnames, 1, ondupkeyclause)
+	singleqry := genQry(tablename, colnames, 1, ondupkeyclause, batchidcol)
 
 	fmt.Println(batchqry)
 	batchstmt, err := db.Prepare(batchqry)
 	handlers.PanicOnError(err)
 	singlestmt, err := db.Prepare(singleqry)
+	lencols := len(colnames)
+	if batchidcol != ""{
+		lencols += 1 ///For the batch id
+	}
 	return &Writer{
 		batchsize: batchsize,
 		batchstmt: batchstmt,
 		singlstmt: singlestmt,
-		cache: make([]interface{}, 0, batchsize * len(colnames)),
-		numfields: len(colnames),
+		cache: make([]interface{}, 0, batchsize * lencols),
+		numfields: lencols,
 	}
+}
+func NewWriter(db *sql.DB, tablename string, colnames []string, ondupkeyclause string,
+	batchsize int)*Writer{
+	return newWriter(db, tablename, colnames, ondupkeyclause, batchsize,
+		"")
+}
+func NewWriterWithBatchId(db *sql.DB, tablename string, colnames []string, ondupkeyclause string,
+	batchsize int, batchcolname string, batchid int64)*Writer{
+	writer := newWriter(db, tablename, colnames, ondupkeyclause, batchsize, batchcolname)
+	writer.batchid = batchid
+	writer.incbatchid = true
+	return writer
 }
 
 func (p *Writer)Exec(vals ...interface{})(res sql.Result, err error){
+	if p.incbatchid {
+		vals = append(vals, p.batchid)
+	}
 	if len(vals) != p.numfields{
 		return nil, errors.New(fmt.Sprint("Mismatch number of columns, expected ", p.numfields,
 			" It should match the number of column names were passed to NewWriter(...)"))
 	}
-
 	p.cache = append(p.cache, vals...)
 	if len(p.cache) == p.batchsize * p.numfields{
 		res, err = p.batchstmt.Exec(p.cache...)
+		if err != nil{
+			return nil, err
+		}
 		p.cache = p.cache[0:0]
 	}
 	if len(p.cache) > p.batchsize * p.numfields{

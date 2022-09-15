@@ -33,8 +33,15 @@ func setup(){
 	primes := []string{"index"}
 	indx := []string{"field2"}
 	mig := migrator.NewMigrator(teststuff.db, migrator.DBTYPE_POSTGRES)
+
 	mig.Migrate("create-test-batch-writer", "test_batch_writer",
 		cols, indx, primes)
+
+	cols = map[string]string{
+		"batchid": "bigint default 0",
+	}
+	mig.AlterTableAdd("Add-batchid-to-test-table", "test_batch_writer", cols)
+
 	_, err := teststuff.db.Exec("DELETE FROM test_batch_writer")
 	handlers.PanicOnError(err)
 
@@ -55,17 +62,38 @@ type TestRowData struct{
 	float2 float64
 }
 
-func Test_Writer(t *testing.T){
+func Test_Writer(t *testing.T) {
 	teststr := "qwertyuiop[]asdfghjkl;'zxcvbnm,.//.,mnbvcxz;lkjhgfdsa][poiuytrewq"
-	teststrindx := 0
-	testfloat := 1.02
-	increment := 0.13
 
 	fields := []string{"index", "field1", "field2", "float1", "float2"}
 	batchsize := 17
 
+	onconflict := `ON CONFLICT (index) DO UPDATE SET field2=excluded.field2`
+
+	batchwriter := NewWriter(teststuff.db, teststuff.tablename, fields, onconflict, batchsize)
+	runtests(batchwriter, batchsize, 0, teststr, t)
+	_, err := teststuff.db.Exec("DELETE FROM test_batch_writer")
+	handlers.PanicOnError(err)
+
+	batchwriter = NewWriterWithBatchId(teststuff.db, teststuff.tablename, fields, onconflict, batchsize,
+		"batchid", 233443334)
+	runtests(batchwriter, batchsize, 233443334, teststr, t)
+}
+
+func runtests(batchwriter *Writer, batchsize int, batchid int64, teststr string, t *testing.T){
+	testdata := genTestData(batchsize, teststr)
+	writeData(batchwriter, testdata, t)
+	checkData(testdata, batchid, t)
+}
+
+
+func genTestData(batchsize int, teststr string )[]TestRowData{
+	teststrindx := 0
+	testfloat := 1.02
+	increment := 0.13
+
 	testdata := make([]TestRowData, 0)
-	for i := 0; i < (batchsize * 5) + 7; i++{
+	for i := 0; i < (batchsize*5)+7; i++ {
 		testrow := TestRowData{
 		}
 		teststrindx, testrow.field1 = getNextTestStr(teststr, teststrindx, 9 )
@@ -78,10 +106,10 @@ func Test_Writer(t *testing.T){
 		testfloat += increment
 		testdata = append(testdata, testrow)
 	}
-	onconflict := `ON CONFLICT (index) DO UPDATE SET field2=excluded.field2`
+	return testdata
+}
 
-	batchwriter := NewWriter(teststuff.db, teststuff.tablename, fields, onconflict, batchsize)
-
+func writeData(batchwriter *Writer, testdata []TestRowData, t *testing.T){
 	for i, row := range testdata{
 		_, err := batchwriter.Exec(i, row.field1, row.field2, row.float1, row.float2)
 		if err != nil{
@@ -94,9 +122,12 @@ func Test_Writer(t *testing.T){
 		t.Error("Unexpected error ", err)
 		t.FailNow()
 	}
+}
+
+func checkData(testdata []TestRowData, batchid int64, t *testing.T){
 
 	////get the data back and check it
-	res, err := teststuff.db.Query(`SELECT index, field1, field2, float1, float2 FROM ` + teststuff.tablename +
+	res, err := teststuff.db.Query(`SELECT index, field1, field2, float1, float2, batchid FROM ` + teststuff.tablename +
 		` ORDER BY index`)
 	handlers.PanicOnError(err)
 	defer res.Close()
@@ -111,9 +142,13 @@ func Test_Writer(t *testing.T){
 		field2 := ""
 		float1 := 0.0
 		float2 := 0.0
-		err := res.Scan(&index, &field1, &field2, &float1, &float2)
+		bid := int64(0)
+		err := res.Scan(&index, &field1, &field2, &float1, &float2, &bid)
 		handlers.PanicOnError(err)
 
+		if bid != batchid{
+			t.Error("Mismatch batch id ", bid, batchid)
+		}
 		if index != i{
 			t.Error("Index mismatch ", i, " vs ", index)
 		}
