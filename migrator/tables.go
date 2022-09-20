@@ -178,11 +178,25 @@ func (p *Migrator)AlterPrimes(migration string, tablename string, primarykeys []
 			allkeys += sep + key
 			sep = ", "
 		}
-		_, err := p.db.Exec("alter table " + tablename + " drop primary key, add primary key(" + allkeys + ")")
-		if err != nil {
-			log.Println("Failed to alter primary keys ", err)
-			log.Panic("Failed to alter primary keys")
+		if p.dbtype == DBTYPE_MYSQL{
+			_, err := p.db.Exec("alter table " + tablename + " drop primary key, add primary key(" + allkeys + ")")
+			if err != nil {
+				log.Println("Failed to alter primary keys ", err)
+				log.Panic("Failed to alter primary keys")
+			}
+		}else{
+			_, err := p.db.Exec("alter table " + tablename + " DROP CONSTRAINT " +
+				tablename + "_pkey")
+			if err != nil{
+				log.Panicln("Failed to alter primary key ", err)
+			}
+			_, err = p.db.Exec("alter table " + tablename + " ADD PRIMARY KEY (" +
+				allkeys + ")")
+			if err != nil{
+				log.Panicln("Failed to alter primary key ", err)
+			}
 		}
+
 		p.markMigration(migration)
 	}
 }
