@@ -102,6 +102,8 @@ func (p *Migrator)CreateIndex(migration string, table string, colname string){
 	p.markMigration(migration)
 }
 
+
+
 func (p *Migrator)AlterTableAdd(migration string, name string, columns map[string]string){
 	if _, ok := p.migrationsmap[migration]; ok {
 		return
@@ -229,6 +231,21 @@ func (p *Migrator)AlterIndexes(migration string, tablename string, indexes []str
 	}
 }
 
+func (p *Migrator)AddUniqueConstrint(migration string, table string, col string){
+
+	if p.dbtype == DBTYPE_MYSQL{
+		log.Panicln("Add unique constraint: Not yet supported for mysql")
+	}
+	createindx := `CREATE UNIQUE INDEX CONCURRENTLY ` + table + `_` +
+					col +
+                    ` ON equipment (equip_id)`
+	p.MigrateRaw(migration + "careat-index", createindx)
+
+	addconstraint := `ALTER TABLE ` + table +
+                    ` ADD CONSTRAINT unique_` + col +
+                    ` UNIQUE USING INDEX ` + table + col
+	p.MigrateRaw(migration, addconstraint)
+}
 
 func (p *Migrator)MigrateRaw(migration string, qry string){
 	if _, ok := p.migrationsmap[migration]; !ok {
