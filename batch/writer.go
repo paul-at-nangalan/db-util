@@ -113,12 +113,14 @@ func (p *Writer)Exec(vals ...interface{})(res sql.Result, err error){
 			" It should match the number of column names were passed to NewWriter(...)"))
 	}
 	p.cache = append(p.cache, vals...)
+	fmt.Println("Cache size: ", len(p.cache))
 	if len(p.cache) == p.batchsize * p.numfields{
 		res, err = p.batchstmt.Exec(p.cache...)
 		if err != nil{
 			return nil, err
 		}
 		p.cache = p.cache[0:0]
+		fmt.Println("Cache zeroed ", len(p.cache))
 	}
 	if len(p.cache) > p.batchsize * p.numfields{
 		log.Panic("Oops, somethings wrong ", len(p.cache), " > ", p.batchsize * p.numfields)
