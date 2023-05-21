@@ -2,7 +2,6 @@ package connect
 
 import (
 	"database/sql"
-	"fmt"
 	_ "github.com/lib/pq"
 	"github.com/paul-at-nangalan/errorhandler/handlers"
 	"github.com/paul-at-nangalan/json-config/cfg"
@@ -47,7 +46,7 @@ func connect(postgrescfg PostgresCfg)*sql.DB{
 	if postgrescfg.Port != ""{
 		constr += " port=" + postgrescfg.Port
 	}
-	fmt.Println("Postgres params: ", constr)
+	//fmt.Println("Postgres params: ", constr)
 	db, err := sql.Open("postgres", constr)
 	handlers.PanicOnError(err)
 
