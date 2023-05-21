@@ -2,6 +2,7 @@ package connect
 
 import (
 	"database/sql"
+	"fmt"
 	_ "github.com/lib/pq"
 	"github.com/paul-at-nangalan/errorhandler/handlers"
 	"github.com/paul-at-nangalan/json-config/cfg"
@@ -29,10 +30,14 @@ func (p *PostgresCfg) Expand() {
 	p.Port = os.ExpandEnv(p.Port)
 }
 
-func Connect()*sql.DB{
+func Connect()*sql.DB {
 	postgrescfg := PostgresCfg{}
 	err := cfg.Read("postgres", &postgrescfg)
 	handlers.PanicOnError(err)
+	return connect(postgrescfg)
+}
+/// For testing
+func connect(postgrescfg PostgresCfg)*sql.DB{
 	constr := `host=` + postgrescfg.Host + ` ` +
 		`dbname=`+ postgrescfg.Database + ` ` +
 		`user=` + postgrescfg.Username + ` ` +
@@ -42,7 +47,7 @@ func Connect()*sql.DB{
 	if postgrescfg.Port != ""{
 		constr += " port=" + postgrescfg.Port
 	}
-	//fmt.Println("Postgres params: ", constr)
+	fmt.Println("Postgres params: ", constr)
 	db, err := sql.Open("postgres", constr)
 	handlers.PanicOnError(err)
 
