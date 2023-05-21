@@ -40,7 +40,7 @@ func Connect()*sql.DB{
 		`sslmode=` + postgrescfg.Sslmode + ` ` +
 		`sslrootcert=` + postgrescfg.CAFile
 	if postgrescfg.Port != ""{
-		constr += "port=" + postgrescfg.Port
+		constr += " port=" + postgrescfg.Port
 	}
 	//fmt.Println("Postgres params: ", constr)
 	db, err := sql.Open("postgres", constr)
