@@ -2,6 +2,7 @@ package connect
 
 import (
 	"database/sql"
+	"fmt"
 	_ "github.com/lib/pq"
 	"github.com/paul-at-nangalan/errorhandler/handlers"
 	"github.com/paul-at-nangalan/json-config/cfg"
@@ -44,6 +45,7 @@ func connect(postgrescfg PostgresCfg)*sql.DB{
 		`sslmode=` + postgrescfg.Sslmode + ` ` +
 		`sslrootcert=` + postgrescfg.CAFile
 	if postgrescfg.Port != ""{
+		fmt.Println("Ffs, port is ", postgrescfg.Port)
 		constr += " port=" + postgrescfg.Port
 	}
 	//fmt.Println("Postgres params: ", constr)
