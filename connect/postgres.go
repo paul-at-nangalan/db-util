@@ -2,10 +2,10 @@ package connect
 
 import (
 	"database/sql"
-	"github.com/paul-at-nangalan/json-config/cfg"
-	"github.com/paul-at-nangalan/errorhandler/handlers"
-	"os"
 	_ "github.com/lib/pq"
+	"github.com/paul-at-nangalan/errorhandler/handlers"
+	"github.com/paul-at-nangalan/json-config/cfg"
+	"os"
 )
 
 type PostgresCfg struct{
@@ -15,6 +15,7 @@ type PostgresCfg struct{
 	Database string
 	CAFile string
 	Sslmode string
+	Port string
 
 	basedir string
 }
@@ -25,6 +26,7 @@ func (p *PostgresCfg) Expand() {
 	p.Host = os.ExpandEnv(p.Host)
 	p.Database = os.ExpandEnv(p.Database)
 	p.CAFile = os.ExpandEnv(p.CAFile)
+	p.Port = os.ExpandEnv(p.Port)
 }
 
 func Connect()*sql.DB{
@@ -37,6 +39,9 @@ func Connect()*sql.DB{
 		`password=` + postgrescfg.Password + ` ` +
 		`sslmode=` + postgrescfg.Sslmode + ` ` +
 		`sslrootcert=` + postgrescfg.CAFile
+	if postgrescfg.Port != ""{
+		constr += "port=" + postgrescfg.Port
+	}
 	//fmt.Println("Postgres params: ", constr)
 	db, err := sql.Open("postgres", constr)
 	handlers.PanicOnError(err)
