@@ -49,7 +49,6 @@ func connect(postgrescfg PostgresCfg)*sql.DB{
 		constr += " port=" + postgrescfg.Port
 	}
 	//fmt.Println("Postgres params: ", constr)
-	fmt.Println("FFS go get is ignoring updates .... ffs")
 	db, err := sql.Open("postgres", constr)
 	handlers.PanicOnError(err)
 
