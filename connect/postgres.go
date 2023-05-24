@@ -46,9 +46,9 @@ func connect(postgrescfg PostgresCfg)*sql.DB{
 		`sslrootcert=` + postgrescfg.CAFile
 	if postgrescfg.Port != ""{
 		fmt.Println("port is ", postgrescfg.Port)
-		//constr += " port=" + postgrescfg.Port
+		constr += " port=" + postgrescfg.Port
 	}
-	fmt.Println("Postgres user: ", postgrescfg.Username)
+	fmt.Println("Postgres connection: ", constr)
 	db, err := sql.Open("postgres", constr)
 	handlers.PanicOnError(err)
 
