@@ -26,6 +26,7 @@ func (p *PostgresCfg) Expand() {
 	p.Password = os.ExpandEnv(p.Password)
 	p.Host = os.ExpandEnv(p.Host)
 	p.Database = os.ExpandEnv(p.Database)
+	fmt.Println("Expand db name: ", p.Database)
 	p.CAFile = os.ExpandEnv(p.CAFile)
 	p.Port = os.ExpandEnv(p.Port)
 }
