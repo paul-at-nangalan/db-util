@@ -6,7 +6,6 @@ import (
 	_ "github.com/lib/pq"
 	"github.com/paul-at-nangalan/errorhandler/handlers"
 	"github.com/paul-at-nangalan/json-config/cfg"
-	"log"
 	"os"
 )
 
@@ -28,7 +27,6 @@ func (p *PostgresCfg) Expand() {
 	p.Host = os.ExpandEnv(p.Host)
 	p.Database = os.ExpandEnv(p.Database)
 	fmt.Println("Expand db name: ", p.Database)
-	log.Panic("FFS")
 	p.CAFile = os.ExpandEnv(p.CAFile)
 	p.Port = os.ExpandEnv(p.Port)
 }
