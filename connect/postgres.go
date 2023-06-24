@@ -34,6 +34,7 @@ func (p *PostgresCfg) Expand() {
 func Connect()*sql.DB {
 	postgrescfg := PostgresCfg{}
 	err := cfg.Read("postgres", &postgrescfg)
+	postgrescfg.Expand() ///// WTF is going on
 	handlers.PanicOnError(err)
 	return connect(postgrescfg)
 }
