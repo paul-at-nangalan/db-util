@@ -219,16 +219,26 @@ func (p *Migrator) DropPrimes(migration string, tablename string) {
 
 func (p *Migrator) AlterIndexes(migration string, tablename string, indexes []string) {
 	if _, ok := p.migrationsmap[migration]; !ok {
-		sep := ""
-		allindexes := ""
-		for _, key := range indexes {
-			allindexes += sep + "ADD INDEX(" + key + ")"
-			sep = ", "
-		}
-		_, err := p.db.Exec("alter table " + tablename + " " + allindexes)
-		if err != nil {
-			log.Println("Failed to alter primary keys ", err)
-			log.Panic("Failed to alter primary keys")
+		if p.dbtype == DBTYPE_MYSQL {
+			sep := ""
+			allindexes := ""
+			for _, key := range indexes {
+				allindexes += sep + "ADD INDEX(" + key + ")"
+				sep = ", "
+			}
+			_, err := p.db.Exec("alter table " + tablename + " " + allindexes)
+			if err != nil {
+				log.Println("Failed to alter primary keys ", err)
+				log.Panic("Failed to alter primary keys")
+			}
+		} else {
+			for _, indexfield := range indexes {
+				sql := `CREATE INDEX ON ` + tablename + ` (` + indexfield + `)`
+				_, err := p.db.Exec(sql)
+				if err != nil {
+					log.Panicln("Failed to alter index with error ", err)
+				}
+			}
 		}
 		p.markMigration(migration)
 	}
