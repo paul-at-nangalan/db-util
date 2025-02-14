@@ -2,6 +2,10 @@ module github.com/paul-at-nangalan/db-util
 
 go 1.23.0
 
+replace (
+	github.com/paul-at-nangalan/db-util => ../db-util
+)
+
 require (
 	github.com/lib/pq v1.10.9
 	github.com/paul-at-nangalan/errorhandler v0.0.0-20220524092750-75ec0f2eca41

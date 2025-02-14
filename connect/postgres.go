@@ -9,14 +9,15 @@ import (
 	"os"
 )
 
-type PostgresCfg struct{
-	Username string
-	Password string
-	Host string
-	Database string
-	CAFile string
-	Sslmode string
-	Port string
+type PostgresCfg struct {
+	Username     string
+	Password     string
+	Host         string
+	Database     string
+	CAFile       string
+	Sslmode      string
+	Port         string
+	BinaryParams string
 
 	basedir string
 }
@@ -29,27 +30,32 @@ func (p *PostgresCfg) Expand() {
 	fmt.Println("Expand db name: ", p.Database)
 	p.CAFile = os.ExpandEnv(p.CAFile)
 	p.Port = os.ExpandEnv(p.Port)
+	p.BinaryParams = os.ExpandEnv(p.BinaryParams)
 }
 
-func Connect()*sql.DB {
+func Connect() *sql.DB {
 	postgrescfg := PostgresCfg{}
 	err := cfg.Read("postgres", &postgrescfg)
 	handlers.PanicOnError(err)
 	return connect(postgrescfg)
 }
-/// For testing
-func connect(postgrescfg PostgresCfg)*sql.DB{
+
+// / For testing
+func connect(postgrescfg PostgresCfg) *sql.DB {
 	constr := `host=` + postgrescfg.Host + ` ` +
-		`dbname=`+ postgrescfg.Database + ` ` +
+		`dbname=` + postgrescfg.Database + ` ` +
 		`user=` + postgrescfg.Username + ` ` +
 		`password=` + postgrescfg.Password + ` ` +
 		`sslmode=` + postgrescfg.Sslmode + ` ` +
 		`sslrootcert=` + postgrescfg.CAFile
-	if postgrescfg.Port != ""{
+	if postgrescfg.Port != "" {
 		fmt.Println("port is ", postgrescfg.Port)
 		constr += " port=" + postgrescfg.Port
 	}
-	//fmt.Println("Postgres params: ", constr)
+	if postgrescfg.BinaryParams != "" {
+		constr += " binary_parameters=" + postgrescfg.BinaryParams
+	}
+	fmt.Println("Postgres params: ", constr)
 	db, err := sql.Open("postgres", constr)
 	handlers.PanicOnError(err)
 
