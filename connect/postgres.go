@@ -55,7 +55,7 @@ func connect(postgrescfg PostgresCfg) *sql.DB {
 	if postgrescfg.BinaryParams != "" {
 		constr += " binary_parameters=" + postgrescfg.BinaryParams
 	}
-	fmt.Println("Postgres params: ", constr)
+	//fmt.Println("Postgres params: ", constr)
 	db, err := sql.Open("postgres", constr)
 	handlers.PanicOnError(err)
 
